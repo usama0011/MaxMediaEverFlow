@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Form, Input, DatePicker, Button, message, Select, Table } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
+import Papa from "papaparse"; // Import for CSV conversion
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -31,7 +32,7 @@ const MailChimpReport = () => {
       );
 
       // Extract relevant data for table
-      const formattedData = response.data.table.map((item) => ({
+      let formattedData = response.data.table.map((item) => ({
         key: item.columns.find((col) => col.column_type === "date")?.id, // Use date as key
         date: dayjs
           .unix(item.columns.find((col) => col.column_type === "date")?.id)
@@ -39,13 +40,52 @@ const MailChimpReport = () => {
         total_clicks: item.reporting.total_click, // Get total clicks
       }));
 
-      setTableData(formattedData);
+      // **Sort data by date in ascending order**
+      formattedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      // **Group consecutive 4 dates and sum total_clicks**
+      let groupedData = [];
+      for (let i = 0; i + 3 < formattedData.length; i += 4) {
+        const group = formattedData.slice(i, i + 4); // Get a batch of 4 dates
+        const totalClicksSum = group.reduce(
+          (sum, item) => sum + item.total_clicks,
+          0
+        );
+        groupedData.push({
+          key: group[0].date, // Use first date in the group as key
+          date: group[0].date, // Show only the first date of the 4-date group
+          total_clicks: totalClicksSum,
+        });
+      }
+
+      setTableData(groupedData);
       message.success("Data fetched successfully!");
     } catch (error) {
       console.error("Error fetching data:", error);
       message.error("Failed to fetch data.");
     }
     setLoading(false);
+  };
+
+  // **Download CSV Function**
+  const downloadCSV = () => {
+    if (tableData.length === 0) {
+      message.error("No data available to download.");
+      return;
+    }
+
+    const csvData = tableData.map(({ date, total_clicks }) => ({
+      "Start Date": date, // Show only first date of 4-day group
+      "Total Clicks": total_clicks,
+    }));
+
+    const csv = Papa.unparse(csvData); // Convert to CSV format
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "MailChimpReport.csv";
+    link.click();
+    message.success("CSV file downloaded successfully!");
   };
 
   const columns = [
@@ -60,6 +100,7 @@ const MailChimpReport = () => {
       key: "total_clicks",
     },
   ];
+
   return (
     <div className="containerDailyActivity">
       <h2 className="titleDailyAcitvity">MaxMdeia Everflow Fetcher</h2>
@@ -108,6 +149,15 @@ const MailChimpReport = () => {
 
       <h3 style={{ marginTop: "20px" }}>Report Data</h3>
       <Table columns={columns} dataSource={tableData} pagination={false} />
+
+      {/* Download CSV Button */}
+      <Button
+        type="default"
+        onClick={downloadCSV}
+        style={{ marginTop: "20px" }}
+      >
+        Download CSV
+      </Button>
     </div>
   );
 };
