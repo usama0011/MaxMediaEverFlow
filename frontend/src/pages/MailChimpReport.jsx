@@ -26,7 +26,7 @@ const MailChimpReport = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/fetch-report", // Call your own backend
+        "https://max-media-ever-flow-59s6.vercel.app/api/fetch-report", // Call your own backend
         payload
       );
 
