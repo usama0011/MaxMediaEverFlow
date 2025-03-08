@@ -1,0 +1,104 @@
+/* General Container */
+.containerDailyActivity {
+  max-width: 100%;
+  margin: 30px auto;
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Title */
+.titleDailyAcitvity {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+/* Form */
+.ant-form {
+  padding: 20px;
+  background: #f7f9fc;
+  border-radius: 8px;
+}
+
+.ant-form-item-label > label {
+  font-weight: bold;
+  color: #34495e;
+}
+
+/* Input Fields */
+.ant-input,
+.ant-picker,
+.ant-select-selector {
+  border-radius: 5px;
+  border: 1px solid #d1d8e0;
+  padding: 8px;
+}
+
+.ant-select-selector {
+  background: #ffffff !important;
+}
+
+/* Primary Button */
+.ant-btn-primary {
+  width: 100%;
+  height: 45px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #007bff;
+  border: none;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.ant-btn-primary:hover {
+  background: #0056b3;
+}
+
+/* Table Styles */
+.ant-table {
+  margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ant-table-thead > tr > th {
+  background: #007bff;
+  color: white;
+  font-size: 16px;
+  text-align: center;
+  padding: 12px;
+}
+
+.ant-table-tbody > tr > td {
+  text-align: left;
+  font-size: 14px;
+  padding: 10px;
+}
+
+.ant-table-tbody > tr:hover {
+  background: #f1f8ff !important;
+}
+
+/* Pagination */
+.ant-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.ant-pagination-item-active {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+}
+
+.ant-pagination-item a {
+  color: #007bff !important;
+}
+
+.ant-pagination-item-active a {
+  color: white !important;
+}
