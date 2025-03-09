@@ -128,7 +128,7 @@ const DailyActivity = () => {
         CoversionRate,
         CostConversion,
       }) => ({
-        Date: date,
+        Date: dayjs.unix(date).format("YYYY-MM-DD"),
         "Bid Request": bid_request,
         Visits: total_clicks, // Changed from "Total Clicks" to "Visits" based on model
         "Campaign Name": campaign_name,
