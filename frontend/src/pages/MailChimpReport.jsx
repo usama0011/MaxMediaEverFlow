@@ -14,6 +14,8 @@ const MailChimpReport = () => {
   // Function to generate a random number between 1.24 and 1.66
   const getRandomDivisor = () =>
     (Math.random() * (1.66 - 1.16) + 1.16).toFixed(2);
+  const getRandomFailedDeliveries = () =>
+    Math.floor(Math.random() * (300 - 60) + 60);
 
   // Function to generate a random number between 4.4 and 7.4
   const getRandomClicksDivisor = () =>
@@ -45,8 +47,6 @@ const MailChimpReport = () => {
         "https://max-media-ever-flow-59s6.vercel.app/api/fetch-report", // Call your own backend
         payload
       );
-      const getRandomDeliveryReduction = () =>
-        Math.floor(Math.random() * (300 - 60) + 60);
 
       // Function to generate a random time in HH:mm format
       const getRandomTime = () => {
@@ -60,28 +60,26 @@ const MailChimpReport = () => {
 
       let formattedData = response.data.table.map((item) => {
         const totalClicks = item.reporting.total_click; // Get total clicks
-        const successfulDeliveries = totalClicks - getRandomDeliveryReduction();
-        const divisor = getRandomDivisor(); // Generate a random divisor
-        // for Opened
+        const divisor = getRandomDivisor(); // Generate a random divisor for Opened
         const clicksDivisor = getRandomClicksDivisor(); // Generate a random divisor for Clicks
         const opened = Math.floor(totalClicks / divisor); // Calculate Opened
         const clicks = Math.floor(totalClicks / clicksDivisor); // Calculate Clicks
         const openedPercentage = Math.round((opened / totalClicks) * 100); // Rounded Opened Percentage
         const clickPercentage = Math.round((clicks / totalClicks) * 100); // Rounded Clicked Percentage
-
-        // Generate Last Edit Date (2 days later + random time)
-        const lastEditDate =
-          dayjs
-            .unix(item.columns.find((col) => col.column_type === "date")?.id)
-            .add(2, "day") // Add 2 days
-            .format("ddd MMMM D, YYYY") + ` ${getRandomTime()}`; // Append random time
-
+        // Generate a random full timestamp
+        // Generate a random time properly within dayjs
+        const lastEditDate = dayjs
+          .unix(item.columns.find((col) => col.column_type === "date")?.id)
+          .add(2, "day")
+          .hour(Math.floor(Math.random() * 24)) // Set random hour (0-23)
+          .minute(Math.floor(Math.random() * 60)) // Set random minute (0-59)
+          .second(Math.floor(Math.random() * 60)) // Set random second (0-59) for variation
+          .format("ddd MMMM D, YYYY HH:mm"); // Correctly format it
         // Generate Last Opened Date (1 day after Last Edit Date + random time)
         const lastOpenedDate =
           dayjs(lastEditDate, "ddd MMMM D, YYYY HH:mm")
             .add(1, "day") // Add 1 day
             .format("MM/DD YYYY") + ` ${getRandomTime()}`; // Append random time
-
         return {
           key: item.columns.find((col) => col.column_type === "date")?.id, // Use date as key
           date: dayjs
@@ -100,7 +98,6 @@ const MailChimpReport = () => {
           clicks, // Clicks value
           openedPercentage, // Rounded Opened Percentage
           clickPercentage,
-          successfulDeliveries,
         };
       });
 
@@ -128,15 +125,17 @@ const MailChimpReport = () => {
         const clickedPercentage = Math.round(
           (totalClicksSumNew / totalClicksSum) * 100
         );
+        const failedDeliveries = getRandomFailedDeliveries(); // Generate failed deliveries for this row
+        const successfullyDelivered = totalClicksSum - failedDeliveries; // Subtract from total clicks
 
         groupedData.push({
           key: group[0].date, // Use first date in the group as key
           date: group[0].date, // Show only the first date of the 4-date group
           sendTime: group[0].sendTime,
-          successfulDeliveries: group[0].successfulDeliveries,
-          lastEditDate: dayjs(group[0].date)
-            .add(2, "day")
-            .format("ddd MMMM D, YYYY HH:mm"), // Ensure it's 2 days later
+          lastEditDate: dayjs(group[0].sendTime)
+            .add(2, "day") // Add exactly 2 days
+            .format("ddd MMMM D, YYYY HH:mm"), // Keep the same format
+
           // Ensure Last Opened Date is 1 day after Last Edit Date
           lastOpenedDate: dayjs(group[0].lastEditDate)
             .add(1, "day")
@@ -147,6 +146,7 @@ const MailChimpReport = () => {
           clicks: totalClicksSumNew, // Clicks (sum of the grouped clicks values)
           openedPercentage, // Rounded Opened Percentage
           clickedPercentage,
+          successfullyDelivered,
         });
       }
 
@@ -176,6 +176,7 @@ const MailChimpReport = () => {
         clickedPercentage,
         sendTime,
         lastEditDate,
+        successfullyDelivered,
       }) => ({
         "Delivered Date": date, // Show only first date of 4-day group
         sendTime: sendTime, // Show only first date of 4-day group
@@ -186,7 +187,7 @@ const MailChimpReport = () => {
         Clicks: clicks, // Clicks column
         "Opened Percentage(%)": `${Math.round(openedPercentage)}`, // Ensure it's rounded
         "Clicked Percentage(%)": `${Math.round(clickedPercentage)}`, // Ensure it's rounded
-        successfulDeliveries: successfulDeliveries,
+        "Successfully Deliveries": successfullyDelivered, // Include in CSV
       })
     );
 
@@ -250,9 +251,9 @@ const MailChimpReport = () => {
       render: (text) => `${text}`, // Append percentage sign
     },
     {
-      title: "Successful Deliveries Count",
-      dataIndex: "successfulDeliveries",
-      key: "successfulDeliveries",
+      title: "Successfully Deliveries",
+      dataIndex: "successfullyDelivered",
+      key: "successfullyDelivered",
     },
   ];
 
