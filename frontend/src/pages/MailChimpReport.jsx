@@ -80,6 +80,10 @@ const MailChimpReport = () => {
           dayjs(lastEditDate, "ddd MMMM D, YYYY HH:mm")
             .add(1, "day") // Add 1 day
             .format("MM/DD YYYY") + ` ${getRandomTime()}`; // Append random time
+        const lastClickedDate =
+          dayjs(lastEditDate, "ddd MMMM D, YYYY HH:mm")
+            .add(1, "day") // Add 1 day
+            .format("MM/DD YYYY") + ` ${getRandomTime()}`; // Append random time
         return {
           key: item.columns.find((col) => col.column_type === "date")?.id, // Use date as key
           date: dayjs
@@ -93,6 +97,7 @@ const MailChimpReport = () => {
             getRandomTime(), // Append random time
           lastEditDate, // Now includes random time
           lastOpenedDate, // Now includes random time
+          lastClickedDate,
           total_clicks: totalClicks, // Audience Recipients
           opened, // Opened value
           clicks, // Clicks value
@@ -127,6 +132,9 @@ const MailChimpReport = () => {
         );
         const failedDeliveries = getRandomFailedDeliveries(); // Generate failed deliveries for this row
         const successfullyDelivered = totalClicksSum - failedDeliveries; // Subtract from total clicks
+        const successfullyDeliveredPercentage = Math.round(
+          (successfullyDelivered / totalClicksSum) * 100
+        );
 
         groupedData.push({
           key: group[0].date, // Use first date in the group as key
@@ -140,6 +148,9 @@ const MailChimpReport = () => {
           lastOpenedDate: dayjs(group[0].lastEditDate)
             .add(1, "day")
             .format("MM/DD HH:mm"),
+          lastClickedDate: dayjs(group[0].lastEditDate)
+            .add(1, "day")
+            .format("MM/DD HH:mm"),
 
           total_clicks: totalClicksSum, // Audience Recipients
           opened: totalOpenedSum, // Opened (sum of the grouped opened values)
@@ -147,6 +158,7 @@ const MailChimpReport = () => {
           openedPercentage, // Rounded Opened Percentage
           clickedPercentage,
           successfullyDelivered,
+          successfullyDeliveredPercentage, // ✅ Add this value
         });
       }
 
@@ -177,17 +189,21 @@ const MailChimpReport = () => {
         sendTime,
         lastEditDate,
         successfullyDelivered,
+        successfullyDeliveredPercentage,
+        lastOpenedDate,
       }) => ({
         "Delivered Date": date, // Show only first date of 4-day group
         sendTime: sendTime, // Show only first date of 4-day group
         "Last Edit Date": lastEditDate, // Include in CSV
         "Last Opened Date": lastOpenedDate,
+        "Last Clicked Date": lastOpenedDate,
         "Total Clicks (Audience Recipients)": total_clicks,
         Opened: opened, // Opened column
         Clicks: clicks, // Clicks column
         "Opened Percentage(%)": `${Math.round(openedPercentage)}`, // Ensure it's rounded
         "Clicked Percentage(%)": `${Math.round(clickedPercentage)}`, // Ensure it's rounded
         "Successfully Deliveries": successfullyDelivered, // Include in CSV
+        "Successfully Deliveries (%)": `${successfullyDeliveredPercentage}`, // ✅ Format as percentage
       })
     );
 
@@ -218,6 +234,11 @@ const MailChimpReport = () => {
     },
     {
       title: "Last Opened Date",
+      dataIndex: "lastOpenedDate",
+      key: "lastOpenedDate",
+    },
+    {
+      title: "Last Clicked Date",
       dataIndex: "lastOpenedDate",
       key: "lastOpenedDate",
     },
@@ -254,6 +275,12 @@ const MailChimpReport = () => {
       title: "Successfully Deliveries",
       dataIndex: "successfullyDelivered",
       key: "successfullyDelivered",
+    },
+    {
+      title: "Successfully Deliveries (%)",
+      dataIndex: "successfullyDeliveredPercentage",
+      key: "successfullyDeliveredPercentage",
+      render: (text) => `${text}`, // Ensure percentage format
     },
   ];
 
